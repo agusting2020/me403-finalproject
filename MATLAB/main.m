@@ -126,11 +126,7 @@ B = [
     B_4_1,   B_4_2]
 
 
-%% Computing Lateral Motion Solutions
-
-%%%
-% Computing Phugoid (Long) & Short Eigenvalues
-%%%
+%% Computing Lateral Motion Eigenvalues
 
 [V,D]   = eig(A)
 lambda  = diag(D)
@@ -139,48 +135,35 @@ eta_roll    = real(lambda(1));
 eta_dutch   = real(lambda(2));
 eta_spiral  = real(lambda(4));
 
-omega_dutch_pos  = imag(lambda(3));
-omega_dutch_neg  = imag(lambda(4));
+omega_dutch_pos  = imag(lambda(2));
+omega_dutch_neg  = imag(lambda(3));
+
+%% Calculating Lateral Motion Approximations
 
 %%%
-% Phugoid (Long) Period Solution
+% Spiral Approximation
 %%%
 
-long_t_half     = 0.69 / abs(long_eta);
-long_period     = 2 * pi / long_omega;
-long_N_half     = 0.110 * abs(long_omega) / abs(long_eta);
+approx_lambda_spiral    = (L_beta * N_r - L_r * N_beta) / L_beta;
+approx_eta_spiral       = real(approx_lambda_spiral);
 
 %%%
-% Phugoid (Long) Period Solution Approximations
+% Roll Approximation
 %%%
 
-omega_n_p          = sqrt(-Z_u * g / u_0);
-zeta_p             = - X_u / (2 * omega_n_p);
-eigen_1_2_p_real   = - zeta_p * omega_n_p;
-eigen_1_2_p_imag   = omega_n_p * sqrt(1 - zeta_p ^ 2);
-period_p           = 2 * pi / eigen_1_2_p_imag;
-t_half_p           = 0.69 / abs(eigen_1_2_p_real);
-N_half_p           = 0.110 * omega_n_p / abs(eigen_1_2_p_real);
+approx_lambda_roll = L_p;
+approx_eta_roll       = real(approx_lambda_roll);
 
 %%%
-% Short Period Solution
+% Dutch Approximation
 %%%
 
-short_t_half       = 0.69 / abs(short_eta);
-short_period       = 2 * pi / short_omega;
-short_N_half       = 0.110 * abs(short_omega) / abs(short_eta);
+approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_p) / u_0);
 
-%%%
-% Short Period Solution Approximations
-%%%
+approx_zeta_dutch = - (1 / (2 * approx_omega_n_dutch)) * ((Y_beta + u_0 * N_r) / u_0);
 
-omega_n_sp         = sqrt(Z_alpha * M_q / u_0 - M_alpha);
-zeta_sp            = - (M_q + M_alpha_dot + Z_alpha / u_0) / (2 * omega_n_sp);
-eigen_1_2_sp_real  = - zeta_sp * omega_n_sp;
-eigen_1_2_sp_imag  = omega_n_sp * sqrt(1 - zeta_sp ^ 2);
-period_sp          = 2 * pi / eigen_1_2_sp_imag;
-t_half_sp          = 0.69 / abs(eigen_1_2_sp_real);
-N_half_sp          = 0.110 * omega_n_sp / abs(eigen_1_2_sp_real);
+
+
 
 
 %% Plotting Lateral Motion Transient Models
