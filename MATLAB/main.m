@@ -123,13 +123,13 @@ B = [
     B_1_1,   B_1_2;
     B_2_1,   B_2_2;
     B_3_1,   B_3_2;
-    B_4_1,   B_4_2]
+    B_4_1,   B_4_2];
 
 
 %% Computing Lateral Motion Eigenvalues
 
-[V,D]   = eig(A)
-lambda  = diag(D)
+[V,D]   = eig(A);
+lambda  = diag(D);
 
 % eta_roll    = real(lambda(1));
 % eta_dutch   = real(lambda(2));
@@ -187,7 +187,7 @@ eqa = 1;
 eqb = -(Y_beta + u_0 * N_r) / u_0;
 eqc = (Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0;
 
-approx_lambda_dutch = - eqb / (2 * eqa) - sqrt((eqb/ (2 * eqa)) ^ 2 - eqc / eqa)
+approx_lambda_dutch = - eqb / (2 * eqa) - sqrt((eqb/ (2 * eqa)) ^ 2 - eqc / eqa);
 
 % approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0);
 % approx_zeta_dutch    = -(0.5 / approx_omega_n_dutch) * ((Y_beta + u_0 * N_r) / u_0);
@@ -207,7 +207,6 @@ approx_time_constant_half_dutch    = 0.69 / abs(approx_eta_dutch);
 approx_time_constant_half_spiral   = 0.69 / abs(approx_eta_spiral);
 
 
-
 %% Plotting Lateral Motion Transient Models
 
 time        = (0 : 0.1 : 100)';
@@ -222,24 +221,32 @@ for i = 1:length(time)
 end
 
 figure(1);
-plot(time, real(StateVar(1,:)));
-xlabel("Time (s)");
-ylabel("\Deltav");
 
-figure(2);
-plot(time, real(StateVar(2,:)));
-xlabel("Time (s)");
-ylabel("\Deltap");
+    tiledlayout(2,2)
 
-figure(3);
-plot(time, real(StateVar(3,:)));
-xlabel("Time (s)");
-ylabel("\Deltar");
+        nexttile
+        plot(time, real(StateVar(1,:)));
+        title("Transient Response for \Deltav")
+        xlabel("Time (s)");
+        ylabel("\Deltav");
 
-figure(4);
-plot(time, real(StateVar(4,:)));
-xlabel("Time (s)");
-ylabel("\Delta\phi");
+        nexttile
+        plot(time, real(StateVar(2,:)));
+        title("Transient Response for \Deltap")
+        xlabel("Time (s)");
+        ylabel("\Deltap");
+
+        nexttile
+        plot(time, real(StateVar(3,:)));
+        title("Transient Response for \Deltar")
+        xlabel("Time (s)");
+        ylabel("\Deltar");
+
+        nexttile
+        plot(time, real(StateVar(4,:)));
+        title("Transient Response for \Delta\phi")
+        xlabel("Time (s)");
+        ylabel("\Delta\phi");
 
 
 %% Lateral Motion Table Generation
@@ -248,16 +255,44 @@ ylabel("\Delta\phi");
 % Eigenvectors
 %%%
 
-table_Eigenvectors_col_Types = ["" +...
-    "Roll Eigenvector";
-    "Dutch Roll Eigenvector";
-    "Spiral Eigenvector"
+table_Eigenvectors_col_Types = [""+...
+    "\Deltav Eigenvector";
+    "\Deltap Eigenvector";
+    "\Deltar Eigenvector"];
+
+table_Eigenvectors_col_Eigenvector_Roll = [""+...
+    num2str(V(1,1));
+    num2str(V(2,1));
+    num2str(V(3,1))];
+
+table_Eigenvectors_col_Eigenvector_Dutch_1 = [""+...
+    num2str(V(1,2));
+    num2str(V(2,2));
+    num2str(V(3,2))];
+
+table_Eigenvectors_col_Eigenvector_Dutch_2 = [""+...
+    num2str(V(1,3));
+    num2str(V(2,3));
+    num2str(V(3,3))];
+
+table_Eigenvectors_col_Eigenvector_Spiral = [""+...
+    num2str(V(1,4));
+    num2str(V(2,4));
+    num2str(V(3,4))];
+
+table_Eigenvectors = table(table_Eigenvectors_col_Eigenvector_Roll, table_Eigenvectors_col_Eigenvector_Dutch_1, table_Eigenvectors_col_Eigenvector_Dutch_2, table_Eigenvectors_col_Eigenvector_Spiral);
+table_Eigenvectors.Properties.VariableNames = ["Roll Eigenvector", "Dutch Roll Eigenvector 1", "Dutch Roll Eigenvector 2", "Spiral Eigenvector"];
+table_Eigenvectors.Properties.RowNames = table_Eigenvectors_col_Types;
+
+%%% print table
+table_Eigenvectors
+
 
 %%%
 % Lateral Motion Approximation vs Exact Method Comparison Table
 %%%
 
-table_ApproxComp_col_Types = ["" +...
+table_ApproxComp_col_Types = [""+...
     "Roll Eigenvalue";
     "Dutch Roll Eigenvalue";
     "Spiral Eigenvalue";
@@ -271,7 +306,7 @@ table_ApproxComp_col_Types = ["" +...
     "Spiral Period (P)";
     "Spiral Frequency (omega)"];
 
-table_ApproxComp_col_ExactMethod = ["" +...
+table_ApproxComp_col_ExactMethod = [""+...
     num2str(lambda_roll);
     num2str(lambda_dutch_negative);
     num2str(lambda_spiral);
@@ -285,7 +320,7 @@ table_ApproxComp_col_ExactMethod = ["" +...
     "-"; % no period for roll
     "-"]; % no frequency for roll
            
-table_ApproxComp_col_Approximation = ["" +...
+table_ApproxComp_col_Approximation = [""+...
     num2str(approx_lambda_roll);
     num2str(approx_lambda_dutch);
     num2str(approx_lambda_spiral);
@@ -299,7 +334,7 @@ table_ApproxComp_col_Approximation = ["" +...
     "-"; % no period for roll
     "-"]; % no frequency for roll
     
-table_ApproxComp_col_Difference = ["" +...
+table_ApproxComp_col_Difference = [""+...
     num2str(100 * abs((lambda_roll - approx_lambda_roll) / lambda_roll)) + "%";
     num2str(100 * abs((lambda_dutch - approx_lambda_dutch) / lambda_dutch)) + "%";
     num2str(100 * abs((lambda_spiral - approx_lambda_spiral) / lambda_spiral)) + "%";
@@ -329,6 +364,8 @@ table_ApproxComp
 
 compute_G
 
+G
+
 %%%
 % Obtaining Transfer Function Information
 %%%
@@ -336,11 +373,25 @@ compute_G
 % sysinfo(G)
 
 %%%
-% Plotting Step Response
+% Plotting Step & Impulse Response
 %%%
 
-figure(9);
-step(G)
+responses_aircraft = figure(2);
+
+    tiledlayout(2,2)
+        
+        nexttile([1 2])
+        plot(step(G))
+        title("Step Response Without Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");        
+
+        nexttile([1 2])
+        plot(impulse(G))
+        title("Impulse Response Without Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");        
+
 
 %%%
 % Setting Up Proportional Controller
@@ -352,11 +403,29 @@ G_c = k_p;
 % * (1 + (1 / T_i * s) + T_d * s);
 
 %%%
-% Plotting Root Locus
+% Plotting Proportional Controller Responses
 %%%
+responses_controller = figure(3);
 
-figure(10);
-rlocus(G_c * G)
+    tiledlayout(2,2)
+        
+        nexttile([1 2])
+        plot(step(G_c * G))
+        title("Step Response With Proportional Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");        
+
+        nexttile([1 2])
+        plot(impulse(G_c * G))
+        title("Impulse Response With Proportional Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");
+
+root_locus = figure(4);
+
+    rlocus(G_c * G)
+    title("Root Locus (Proportional Controller");
+
 
 %%%
 % 
