@@ -22,7 +22,7 @@
 % Note that A,B,C,D define a system in state-space form
 %
 
-% C = eye(4,4);
+C = eye(4,4);
 D = zeros(4,2);
 
 %
@@ -48,7 +48,7 @@ o_v = 1;
 % Create transfer function from from input iu to output ou % 
 %
 
-Lat_G = tf(NUM(o_v,:), DEN);
+G = tf(NUM(o_v,:), DEN);
 
 
 

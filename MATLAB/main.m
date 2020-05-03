@@ -9,9 +9,9 @@
 
 %% Import Aircraft
 
-% aircraft_sample
+aircraft_sample
 
-aircraft_convair_880
+% aircraft_convair_880
 
 %% Missing Lateral Motion Coefficients
 
@@ -131,38 +131,80 @@ B = [
 [V,D]   = eig(A)
 lambda  = diag(D)
 
-eta_roll    = real(lambda(1));
-eta_dutch   = real(lambda(2));
-eta_spiral  = real(lambda(4));
+% eta_roll    = real(lambda(1));
+% eta_dutch   = real(lambda(2));
+% eta_spiral  = real(lambda(4));
+% 
+% omega_dutch_pos  = imag(lambda(2));
+% omega_dutch_neg  = imag(lambda(3));
 
-omega_dutch_pos  = imag(lambda(2));
-omega_dutch_neg  = imag(lambda(3));
+lambda_roll = lambda(1);
+lambda_dutch = lambda(2);
+lambda_dutch_negative = lambda(3);
+lambda_spiral = lambda(4);
 
-%% Calculating Lateral Motion Approximations
+eta_roll    = real(lambda_roll);
+eta_dutch   = real(lambda_dutch);
+eta_spiral  = real(lambda_spiral);
+
+omega_dutch_pos  = imag(lambda_dutch);
+omega_dutch_neg  = imag(lambda_dutch_negative);
+
+
+
+%% Computing Lateral Motion Solutions
+
+period_dutch    = 2 * pi / abs(omega_dutch_pos);
+
+time_constant_half_roll     = 0.69 / abs(eta_roll);
+time_constant_half_dutch    = 0.69 / abs(eta_dutch);
+time_constant_half_spiral   = 0.69 / abs(eta_spiral);
+
+
+
+%% Computing Lateral Motion Eigenvalue & Solution Approximations
 
 %%%
-% Spiral Approximation
+% Spiral Eigenvalue Approximation
 %%%
 
 approx_lambda_spiral    = (L_beta * N_r - L_r * N_beta) / L_beta;
 approx_eta_spiral       = real(approx_lambda_spiral);
 
-%%%
-% Roll Approximation
-%%%
-
-approx_lambda_roll = L_p;
-approx_eta_roll       = real(approx_lambda_roll);
 
 %%%
-% Dutch Approximation
+% Roll Eigenvalue Approximation
 %%%
 
-approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_p) / u_0);
+approx_lambda_roll  = L_p;
+approx_eta_roll     = real(approx_lambda_roll);
 
-approx_zeta_dutch = - (1 / (2 * approx_omega_n_dutch)) * ((Y_beta + u_0 * N_r) / u_0);
+%%%
+% Dutch Eigenvalue Approximation
+%%%
 
+eqa = 1;
+eqb = -(Y_beta + u_0 * N_r) / u_0;
+eqc = (Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0;
 
+approx_lambda_dutch = - eqb / (2 * eqa) - sqrt((eqb/ (2 * eqa)) ^ 2 - eqc / eqa)
+
+% approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0);
+% approx_zeta_dutch    = -(0.5 / approx_omega_n_dutch) * ((Y_beta + u_0 * N_r) / u_0);
+
+approx_omega_n_dutch = abs(imag(approx_lambda_dutch));
+approx_eta_dutch = abs(real(approx_lambda_dutch));
+approx_zeta_dutch    = -(0.5 / approx_omega_n_dutch) * ((Y_beta + u_0 * N_r) / u_0);
+
+%%%
+% Lateral Motion Solution Approximations
+%%%
+
+approx_period_dutch    = 2 * pi / abs(approx_omega_n_dutch);
+
+approx_time_constant_half_roll     = 0.69 / abs(approx_eta_roll);
+approx_time_constant_half_dutch    = 0.69 / abs(approx_eta_dutch);
+approx_time_constant_half_spiral   = 0.69 / abs(approx_eta_spiral);
 
 
 
@@ -203,44 +245,80 @@ ylabel("\Delta\phi");
 %% Lateral Motion Table Generation
 
 %%%
+% Eigenvectors
+%%%
+
+table_Eigenvectors_col_Types = ["" +...
+    "Roll Eigenvector";
+    "Dutch Roll Eigenvector";
+    "Spiral Eigenvector"
+
+%%%
 % Lateral Motion Approximation vs Exact Method Comparison Table
 %%%
 
-table_ApproxComp_col_Types = [""+...
-    "Phugoid Half Amp Time (t_(1/2))";
-    "Phugoid Period (P)";
-    "Phugoid Frequency (omega)";
-    "Short Half Amp Time (t_(1/2))";
-    "Short Period (P)";
-    "Short Frequency (omega)"];
+table_ApproxComp_col_Types = ["" +...
+    "Roll Eigenvalue";
+    "Dutch Roll Eigenvalue";
+    "Spiral Eigenvalue";
+    "Roll Half Amp Time (t_(1/2))";
+    "Roll Period (P)";
+    "Roll Frequency (omega)";
+    "Dutch Roll Half Amp Time (t_(1/2))";
+    "Dutch Roll Period (P)";
+    "Dutch Roll Frequency (omega)";
+    "Spiral Half Amp Time (t_(1/2))";
+    "Spiral Period (P)";
+    "Spiral Frequency (omega)"];
 
-table_ApproxComp_col_ExactMethod = [""+...
-    num2str(long_t_half) + " s";
-    num2str(long_period) + " s";
-    num2str(long_omega) + " rad/s"
-    num2str(short_t_half) + " s";
-    num2str(short_period) + " s";
-    num2str(short_omega) + " rad/s"];
+table_ApproxComp_col_ExactMethod = ["" +...
+    num2str(lambda_roll);
+    num2str(lambda_dutch_negative);
+    num2str(lambda_spiral);
+    num2str(time_constant_half_roll) + " s";
+    "-"; % no period for roll
+    "-"; % no frequency for roll
+    num2str(time_constant_half_dutch) + " s";
+    num2str(period_dutch) + " s";
+    num2str(omega_dutch_pos) + " rad/s"
+    num2str(time_constant_half_spiral) + " s";
+    "-"; % no period for roll
+    "-"]; % no frequency for roll
            
-table_ApproxComp_col_Approximation = [""+...
-    num2str(t_half_p) + " s";
-    num2str(period_p) + " s";
-    num2str(omega_n_p) + " rad/s"
-    num2str(t_half_sp) + " s";
-    num2str(period_sp) + " s";
-    num2str(omega_n_sp) + " rad/s"];
+table_ApproxComp_col_Approximation = ["" +...
+    num2str(approx_lambda_roll);
+    num2str(approx_lambda_dutch);
+    num2str(approx_lambda_spiral);
+    num2str(approx_time_constant_half_roll) + " s";
+    "-"; % no period for roll
+    "-"; % no frequency for roll
+    num2str(approx_time_constant_half_dutch) + " s";
+    num2str(approx_period_dutch) + " s";
+    num2str(approx_omega_n_dutch) + " rad/s"
+    num2str(approx_time_constant_half_spiral) + " s";
+    "-"; % no period for roll
+    "-"]; % no frequency for roll
     
-table_ApproxComp_col_Difference = [""+...
-    num2str(100 * abs((long_t_half - t_half_p) / long_t_half)) + "%";
-    num2str(100 * abs((long_period - period_p) / long_period)) + "%";
-    num2str(100 * abs((long_omega - omega_n_p) / long_omega)) + "%";
-    num2str(100 * abs((short_t_half - t_half_sp) / short_t_half)) + "%";
-    num2str(100 * abs((short_period - period_sp) / short_period)) + "%";
-    num2str(100 * abs((short_omega - omega_n_sp) / short_omega)) + "%"];
+table_ApproxComp_col_Difference = ["" +...
+    num2str(100 * abs((lambda_roll - approx_lambda_roll) / lambda_roll)) + "%";
+    num2str(100 * abs((lambda_dutch - approx_lambda_dutch) / lambda_dutch)) + "%";
+    num2str(100 * abs((lambda_spiral - approx_lambda_spiral) / lambda_spiral)) + "%";
+    num2str(100 * abs((time_constant_half_roll - approx_time_constant_half_roll) / time_constant_half_roll)) + "%";
+    "-"; % no period for roll
+    "-"; % no frequency for roll
+    num2str(100 * abs((time_constant_half_dutch - approx_time_constant_half_dutch) / time_constant_half_dutch)) + "%";
+    num2str(100 * abs((period_dutch - approx_period_dutch) / period_dutch)) + "%";
+    num2str(100 * abs((omega_dutch_pos - approx_omega_n_dutch) / omega_dutch_pos)) + "%";
+    num2str(100 * abs((time_constant_half_spiral - approx_time_constant_half_spiral) / time_constant_half_spiral)) + "%";
+    "-"; % no period for roll
+    "-"]; % no frequency for roll
 
 table_ApproxComp = table(table_ApproxComp_col_ExactMethod, table_ApproxComp_col_Approximation, table_ApproxComp_col_Difference);
 table_ApproxComp.Properties.VariableNames = ["Exact Method", "Approximate Method", "Difference"];
 table_ApproxComp.Properties.RowNames = table_ApproxComp_col_Types;
+
+%%% print table
+table_ApproxComp
 
 
 %% Part II Transfer Function
@@ -255,7 +333,7 @@ compute_G
 % Obtaining Transfer Function Information
 %%%
 
-sysinfo(G)
+% sysinfo(G)
 
 %%%
 % Plotting Step Response
