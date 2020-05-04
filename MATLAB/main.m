@@ -9,9 +9,9 @@
 
 %% Import Aircraft
 
-aircraft_sample
+% aircraft_sample
 
-% aircraft_convair_880
+aircraft_convair_880
 
 %% Missing Lateral Motion Coefficients
 
@@ -100,7 +100,7 @@ A = [
     A_1_1,   A_1_2,   A_1_3,   A_1_4;
     A_2_1,   A_2_2,   A_2_3,   A_2_4;
     A_3_1,   A_3_2,   A_3_3,   A_3_4;
-    A_4_1,   A_4_2,   A_4_3,   A_4_4]
+    A_4_1,   A_4_2,   A_4_3,   A_4_4];
 
 
 %%%
@@ -151,14 +151,17 @@ omega_dutch_pos  = imag(lambda_dutch);
 omega_dutch_neg  = imag(lambda_dutch_negative);
 
 
-
 %% Computing Lateral Motion Solutions
 
 period_dutch    = 2 * pi / abs(omega_dutch_pos);
 
-time_constant_half_roll     = 0.69 / abs(eta_roll);
-time_constant_half_dutch    = 0.69 / abs(eta_dutch);
-time_constant_half_spiral   = 0.69 / abs(eta_spiral);
+tau_roll   = - 1 / eta_roll;
+tau_dutch  = - 1 / eta_dutch;
+tau_spiral = - 1 / eta_spiral;
+
+time_half_roll     = 0.69 / abs(eta_roll);
+time_half_dutch    = 0.69 / abs(eta_dutch);
+time_half_spiral   = 0.69 / abs(eta_spiral);
 
 
 
@@ -192,19 +195,27 @@ approx_lambda_dutch = - eqb / (2 * eqa) - sqrt((eqb/ (2 * eqa)) ^ 2 - eqc / eqa)
 % approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0);
 % approx_zeta_dutch    = -(0.5 / approx_omega_n_dutch) * ((Y_beta + u_0 * N_r) / u_0);
 
-approx_omega_n_dutch = abs(imag(approx_lambda_dutch));
+approx_omega_dutch = abs(imag(approx_lambda_dutch));
 approx_eta_dutch = abs(real(approx_lambda_dutch));
-approx_zeta_dutch    = -(0.5 / approx_omega_n_dutch) * ((Y_beta + u_0 * N_r) / u_0);
 
-%%%
-% Lateral Motion Solution Approximations
-%%%
+approx_omega_n_dutch = sqrt((Y_beta * N_r - N_beta * Y_r + u_0 * N_beta) / u_0);
+approx_zeta_dutch    = -(0.5 / approx_omega_dutch) * ((Y_beta + u_0 * N_r) / u_0);
 
-approx_period_dutch    = 2 * pi / abs(approx_omega_n_dutch);
+approx_eta_dutch_calc = -approx_omega_n_dutch * approx_zeta_dutch;
+approx_omega_dutch_calc = approx_omega_n_dutch * sqrt(1 - approx_zeta_dutch ^ 2);
 
-approx_time_constant_half_roll     = 0.69 / abs(approx_eta_roll);
-approx_time_constant_half_dutch    = 0.69 / abs(approx_eta_dutch);
-approx_time_constant_half_spiral   = 0.69 / abs(approx_eta_spiral);
+
+%% Lateral Motion Solution Approximations
+
+approx_period_dutch    = 2 * pi / abs(approx_omega_dutch);
+
+approx_tau_roll   = - 1 / approx_eta_roll;
+approx_tau_dutch  = - 1 / approx_eta_dutch;
+approx_tau_spiral = - 1 / approx_eta_spiral;
+
+approx_time_half_roll     = 0.69 / abs(approx_eta_roll);
+approx_time_half_dutch    = 0.69 / abs(approx_eta_dutch);
+approx_time_half_spiral   = 0.69 / abs(approx_eta_spiral);
 
 
 %% Plotting Lateral Motion Transient Models
@@ -212,12 +223,21 @@ approx_time_constant_half_spiral   = 0.69 / abs(approx_eta_spiral);
 time        = (0 : 0.1 : 100)';
 StateVar    = zeros(4,length(time));
 C           = V\x_0;
+StateVar2   = StateVar;
+C2          = V\[0; 1; 0; (15*pi/180)];
 
 for i = 1:length(time)
     StateVar(:, i)  =   C(1) * V(:,1) * exp(lambda(1) * time(i)) + ...
                         C(2) * V(:,2) * exp(lambda(2) * time(i)) + ...
                         C(3) * V(:,3) * exp(lambda(3) * time(i)) + ...
                         C(4) * V(:,4) * exp(lambda(4) * time(i));
+end
+
+for i = 1:length(time)
+    StateVar2(:, i) =   C2(1) * V(:,1) * exp(lambda(1) * time(i)) + ...
+                        C2(2) * V(:,2) * exp(lambda(2) * time(i)) + ...
+                        C2(3) * V(:,3) * exp(lambda(3) * time(i)) + ...
+                        C2(4) * V(:,4) * exp(lambda(4) * time(i));
 end
 
 figure(1);
@@ -244,6 +264,35 @@ figure(1);
 
         nexttile
         plot(time, real(StateVar(4,:)));
+        title("Transient Response for \Delta\phi")
+        xlabel("Time (s)");
+        ylabel("\Delta\phi");
+        
+        
+figure(2);
+
+    tiledlayout(2,2)
+
+        nexttile
+        plot(time, real(StateVar2(1,:)));
+        title("Transient Response for \Deltav")
+        xlabel("Time (s)");
+        ylabel("\Deltav");
+
+        nexttile
+        plot(time, real(StateVar2(2,:)));
+        title("Transient Response for \Deltap")
+        xlabel("Time (s)");
+        ylabel("\Deltap");
+
+        nexttile
+        plot(time, real(StateVar2(3,:)));
+        title("Transient Response for \Deltar")
+        xlabel("Time (s)");
+        ylabel("\Deltar");
+
+        nexttile
+        plot(time, real(StateVar2(4,:)));
         title("Transient Response for \Delta\phi")
         xlabel("Time (s)");
         ylabel("\Delta\phi");
@@ -285,6 +334,7 @@ table_Eigenvectors.Properties.VariableNames = ["Roll Eigenvector", "Dutch Roll E
 table_Eigenvectors.Properties.RowNames = table_Eigenvectors_col_Types;
 
 %%% print table
+writetable(table_Eigenvectors,'tabulation.xlsx','Sheet',1);
 table_Eigenvectors
 
 
@@ -296,12 +346,15 @@ table_ApproxComp_col_Types = [""+...
     "Roll Eigenvalue";
     "Dutch Roll Eigenvalue";
     "Spiral Eigenvalue";
+    "Roll Time Constant (s)";
     "Roll Half Amp Time (t_(1/2))";
     "Roll Period (P)";
     "Roll Frequency (omega)";
+    "Dutch Roll Time Constant (s)";
     "Dutch Roll Half Amp Time (t_(1/2))";
     "Dutch Roll Period (P)";
     "Dutch Roll Frequency (omega)";
+    "Spiral Time Constant (s)";
     "Spiral Half Amp Time (t_(1/2))";
     "Spiral Period (P)";
     "Spiral Frequency (omega)"];
@@ -310,27 +363,36 @@ table_ApproxComp_col_ExactMethod = [""+...
     num2str(lambda_roll);
     num2str(lambda_dutch_negative);
     num2str(lambda_spiral);
-    num2str(time_constant_half_roll) + " s";
+    num2str(tau_roll) + " s";
+    num2str(time_half_roll) + " s";
     "-"; % no period for roll
     "-"; % no frequency for roll
-    num2str(time_constant_half_dutch) + " s";
+    num2str(tau_dutch) + " s";
+    num2str(time_half_dutch) + " s";
     num2str(period_dutch) + " s";
     num2str(omega_dutch_pos) + " rad/s"
-    num2str(time_constant_half_spiral) + " s";
-    "-"; % no period for roll
-    "-"]; % no frequency for roll
+    num2str(tau_spiral) + " s";
+    num2str(time_half_spiral) + " s";
+    "-"; % no period for spiral
+    "-"]; % no frequency for spiral
            
 table_ApproxComp_col_Approximation = [""+...
     num2str(approx_lambda_roll);
     num2str(approx_lambda_dutch);
     num2str(approx_lambda_spiral);
-    num2str(approx_time_constant_half_roll) + " s";
+    
+    num2str(approx_tau_roll) + " s";
+    num2str(approx_time_half_roll) + " s";
     "-"; % no period for roll
     "-"; % no frequency for roll
-    num2str(approx_time_constant_half_dutch) + " s";
+    
+    num2str(approx_tau_dutch) + " s";
+    num2str(approx_time_half_dutch) + " s";
     num2str(approx_period_dutch) + " s";
-    num2str(approx_omega_n_dutch) + " rad/s"
-    num2str(approx_time_constant_half_spiral) + " s";
+    num2str(approx_omega_dutch) + " rad/s"
+    
+    num2str(approx_tau_spiral) + " s";
+    num2str(approx_time_half_spiral) + " s";
     "-"; % no period for roll
     "-"]; % no frequency for roll
     
@@ -338,21 +400,28 @@ table_ApproxComp_col_Difference = [""+...
     num2str(100 * abs((lambda_roll - approx_lambda_roll) / lambda_roll)) + "%";
     num2str(100 * abs((lambda_dutch - approx_lambda_dutch) / lambda_dutch)) + "%";
     num2str(100 * abs((lambda_spiral - approx_lambda_spiral) / lambda_spiral)) + "%";
-    num2str(100 * abs((time_constant_half_roll - approx_time_constant_half_roll) / time_constant_half_roll)) + "%";
+    
+    num2str(100 * abs((tau_roll - approx_tau_roll) / tau_roll)) + "%";
+    num2str(100 * abs((time_half_roll - approx_time_half_roll) / time_half_roll)) + "%";
     "-"; % no period for roll
     "-"; % no frequency for roll
-    num2str(100 * abs((time_constant_half_dutch - approx_time_constant_half_dutch) / time_constant_half_dutch)) + "%";
+    
+    num2str(100 * abs((tau_dutch - approx_tau_dutch) / tau_dutch)) + "%";
+    num2str(100 * abs((time_half_dutch - approx_time_half_dutch) / time_half_dutch)) + "%";
     num2str(100 * abs((period_dutch - approx_period_dutch) / period_dutch)) + "%";
-    num2str(100 * abs((omega_dutch_pos - approx_omega_n_dutch) / omega_dutch_pos)) + "%";
-    num2str(100 * abs((time_constant_half_spiral - approx_time_constant_half_spiral) / time_constant_half_spiral)) + "%";
-    "-"; % no period for roll
-    "-"]; % no frequency for roll
+    num2str(100 * abs((omega_dutch_pos - approx_omega_dutch) / omega_dutch_pos)) + "%";
+    
+    num2str(100 * abs((tau_spiral - approx_tau_spiral) / tau_spiral)) + "%";
+    num2str(100 * abs((time_half_spiral - approx_time_half_spiral) / time_half_spiral)) + "%";
+    "-"; % no period for spiral
+    "-"]; % no frequency for spiral
 
 table_ApproxComp = table(table_ApproxComp_col_ExactMethod, table_ApproxComp_col_Approximation, table_ApproxComp_col_Difference);
 table_ApproxComp.Properties.VariableNames = ["Exact Method", "Approximate Method", "Difference"];
 table_ApproxComp.Properties.RowNames = table_ApproxComp_col_Types;
 
 %%% print table
+writetable(table_ApproxComp,'tabulation.xlsx','Sheet',2);
 table_ApproxComp
 
 
@@ -364,19 +433,20 @@ table_ApproxComp
 
 compute_G
 
+%%% print transient function G
 G
 
 %%%
 % Obtaining Transfer Function Information
 %%%
 
-% sysinfo(G)
+stepinfo(G)
 
 %%%
-% Plotting Step & Impulse Response
+% Plotting Step Responses
 %%%
 
-responses_aircraft = figure(2);
+responses_aircraft = figure(3);
 
     tiledlayout(2,2)
         
@@ -392,42 +462,87 @@ responses_aircraft = figure(2);
         xlabel("Time (s)");
         ylabel("Amplitude");        
 
-
 %%%
-% Setting Up Proportional Controller
+% Finding Controller
 %%%
 
-k_p = 0.1;
-G_c = k_p;
+Gc_MATLAB = pidtune(G, 'PID')
+        
+%% Setting Up Proportional Controller
+
+Kp_P = -.00060;
+
+C_P = pid(Kp_P);
+
+T_P = feedback(G*C_P,1);
+
+figure(100);
+rlocus(T_P)
+
+figure(101);
+step(T_P)
+
+Kp_PI = -0.00060;
+
+Ki_PI = -0.0000556;
+
+C_PI  = pid(Kp_PI, Ki_PI);
+
+T_PI = feedback(G*C_PI,1); 
+
+figure(200);
+rlocus(T_PI)
+
+figure(201);
+step(T_PI);
 
 % * (1 + (1 / T_i * s) + T_d * s);
 
 %%%
 % Plotting Proportional Controller Responses
 %%%
-responses_controller = figure(3);
+
+responses_controller = figure(11);
 
     tiledlayout(2,2)
         
         nexttile([1 2])
-        plot(step(G_c * G))
+        plot(step(T_P))
         title("Step Response With Proportional Controller")
         xlabel("Time (s)");
         ylabel("Amplitude");        
 
         nexttile([1 2])
-        plot(impulse(G_c * G))
+        plot(impulse(T_P))
         title("Impulse Response With Proportional Controller")
         xlabel("Time (s)");
         ylabel("Amplitude");
 
-root_locus = figure(4);
+root_locus = figure(12);
 
-    rlocus(G_c * G)
+    rlocus(C_P * G)
     title("Root Locus (Proportional Controller");
+    
+    
+responses_controller_PI = figure(21);
 
+    tiledlayout(2,2)
+        
+        nexttile([1 2])
+        plot(step(T_PI))
+        title("Step Response With PI Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");        
 
-%%%
-% 
+        nexttile([1 2])
+        plot(impulse(T_PI))
+        title("Impulse Response With PI Controller")
+        xlabel("Time (s)");
+        ylabel("Amplitude");
+
+root_locus_PI = figure(22);
+
+    rlocus(T_PI)
+    title("Root Locus (PI Controller");
 
 
