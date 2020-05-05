@@ -466,40 +466,23 @@ responses_aircraft = figure(3);
 % Finding Controller
 %%%
 
-Gc_MATLAB = pidtune(G, 'PID')
+% Gc_MATLAB = pidtune(G, 'PID')
         
-%% Setting Up Proportional Controller
+%% Proportional Controller
 
-Kp_P = -.00060;
+%%%
+% Defining Parameters
+%%%
+
+Kp_P = 0.1;
 
 C_P = pid(Kp_P);
 
 T_P = feedback(G*C_P,1);
 
-figure(100);
-rlocus(T_P)
-
-figure(101);
-step(T_P)
-
-Kp_PI = -0.00060;
-
-Ki_PI = -0.0000556;
-
-C_PI  = pid(Kp_PI, Ki_PI);
-
-T_PI = feedback(G*C_PI,1); 
-
-figure(200);
-rlocus(T_PI)
-
-figure(201);
-step(T_PI);
-
-% * (1 + (1 / T_i * s) + T_d * s);
 
 %%%
-% Plotting Proportional Controller Responses
+% Plotting Proportional Controller Response & Root Locus
 %%%
 
 responses_controller = figure(11);
@@ -521,8 +504,31 @@ responses_controller = figure(11);
 root_locus = figure(12);
 
     rlocus(C_P * G)
-    title("Root Locus (Proportional Controller");
-    
+    title("Root Locus (Proportional Controller)");
+    sgrid(sqrt(2)/2,1)
+    axis equal
+
+
+%% PI Controller
+
+%%%
+% Defining Parameters for PI Controller
+%%%
+
+Kp_PI = -0.00018;
+
+Ki_PI = -0.0000556;
+
+C_PI  = pid(Kp_PI, Ki_PI);
+
+T_PI = feedback(G*C_PI,1); 
+
+% * (1 + (1 / T_i * s) + T_d * s);
+
+
+%%%
+% Plotting PI Controller  Response & Root Locus
+%%%
     
 responses_controller_PI = figure(21);
 
@@ -543,6 +549,6 @@ responses_controller_PI = figure(21);
 root_locus_PI = figure(22);
 
     rlocus(T_PI)
-    title("Root Locus (PI Controller");
+    title("Root Locus (PI Controller)");
 
 
