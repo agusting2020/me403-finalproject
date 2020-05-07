@@ -29,7 +29,7 @@ D = zeros(4,2);
 % Define input element (row of u)
 %
 
-i_v = 1;
+i_v = 2;
 
 
 %
@@ -42,7 +42,7 @@ i_v = 1;
 % Define output element % 
 %
 
-o_v = 1;
+o_v = 2;
 
 %
 % Create transfer function from from input iu to output ou % 

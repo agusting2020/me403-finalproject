@@ -433,15 +433,16 @@ table_ApproxComp
 
 compute_G
 
+
 %%% print transient function G
 G
+
 
 %%%
 % Obtaining Transfer Function Information
 %%%
 
 stepinfo(G)
-
 
 
 %%%
@@ -471,9 +472,16 @@ responses_aircraft = figure(3);
 % Defining Parameters
 %%%
 
-Kp_P = 1;
+% C_P_PT = pidtune(G,'p');
 
-% C_P = pidtune(G,'p');
+% [Kcr_P,r_P] = rlocfind(G)
+% 
+% Kp_P = Kcr_P * 0.5
+
+Kp_P = [-0.385429347282575];
+
+Kp_p = 0.05
+
 C_P = pid(Kp_P);
 
 T_P = feedback(G*C_P,1);
@@ -507,10 +515,10 @@ root_locus = figure(12);
     axis equal
 
 
-%% PI Controller
+%% PID Controller
 
 %%%
-% Defining Parameters for PI Controller
+% Defining Parameters for PID Controller
 %%%
 
 % Kp_PI = -0.00018;
@@ -519,36 +527,57 @@ root_locus = figure(12);
 % 
 % C_PI  = pid(Kp_PI, Ki_PI);
 
-C_PI = pidtune(G,'pi');
+C_PID = pidtune(G,'pid')
 
-T_PI = feedback(G*C_PI,1); 
+T_PID = feedback(G*C_PID,1); 
 
 % * (1 + (1 / T_i * s) + T_d * s);
 
 
 %%%
-% Plotting PI Controller  Response & Root Locus
+% Plotting PID Controller  Response & Root Locus
 %%%
     
-responses_controller_PI = figure(21);
+responses_controller_PID = figure(21);
 
     tiledlayout(2,2)
         
         nexttile([1 2])
-        plot(step(T_PI))
-        title("Step Response With PI Controller")
+        plot(step(T_PID))
+        title("Step Response With PID Controller")
         xlabel("Time (s)");
         ylabel("Amplitude");        
 
         nexttile([1 2])
-        plot(impulse(T_PI))
-        title("Impulse Response With PI Controller")
+        plot(impulse(T_PID))
+        title("Impulse Response With PID Controller")
         xlabel("Time (s)");
         ylabel("Amplitude");
 
-root_locus_PI = figure(22);
+root_locus_PID = figure(22);
 
-    rlocus(T_PI)
-    title("Root Locus (PI Controller)");
+    rlocus(T_PID)
+    title("Root Locus (PID Controller)");
+    
+    
+% [Kcr, r] = rlocfind(T_PID)
+% 
+% Tcr = 2*pi/imag(r(2));
+% 
+% Kp=0.6*Kcr;
+% 
+% Ti=0.5*Tcr;
+% 
+% Td=0.125*Tcr;
+% 
+% C_PID = tf([Kp*Td*Ti Kp*Ti Kp], [Ti 0])
+% 
+% T_PID = feedback(G*C_PID,1);
+% 
+% root_locus_PID_2 = figure(23);
+% 
+%     rlocus(T_PID)
+%     title("Root Locus (PID Controller)");
+
 
 
