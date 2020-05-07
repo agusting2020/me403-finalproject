@@ -17,7 +17,7 @@ aircraft_convair_880
 
 C_y_p       = 0;
 C_y_r       = 0;
-C_y_delta_a = 0;    
+C_y_delta_a = 0;
 
 
 %% Initializing Lateral Motion Derivatives
@@ -442,8 +442,10 @@ G
 
 stepinfo(G)
 
+
+
 %%%
-% Plotting Step Responses
+% Plotting Step Responses & Root Locus
 %%%
 
 responses_aircraft = figure(3);
@@ -460,22 +462,18 @@ responses_aircraft = figure(3);
         plot(impulse(G))
         title("Impulse Response Without Controller")
         xlabel("Time (s)");
-        ylabel("Amplitude");        
+        ylabel("Amplitude");
 
-%%%
-% Finding Controller
-%%%
 
-% Gc_MATLAB = pidtune(G, 'PID')
-        
 %% Proportional Controller
 
 %%%
 % Defining Parameters
 %%%
 
-Kp_P = 0.1;
+Kp_P = 1;
 
+% C_P = pidtune(G,'p');
 C_P = pid(Kp_P);
 
 T_P = feedback(G*C_P,1);
@@ -505,7 +503,7 @@ root_locus = figure(12);
 
     rlocus(C_P * G)
     title("Root Locus (Proportional Controller)");
-    sgrid(sqrt(2)/2,1)
+%     sgrid(sqrt(2)/2,)
     axis equal
 
 
@@ -515,11 +513,13 @@ root_locus = figure(12);
 % Defining Parameters for PI Controller
 %%%
 
-Kp_PI = -0.00018;
+% Kp_PI = -0.00018;
+% 
+% Ki_PI = -0.0000556;
+% 
+% C_PI  = pid(Kp_PI, Ki_PI);
 
-Ki_PI = -0.0000556;
-
-C_PI  = pid(Kp_PI, Ki_PI);
+C_PI = pidtune(G,'pi');
 
 T_PI = feedback(G*C_PI,1); 
 
